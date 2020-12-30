@@ -221,6 +221,8 @@ names(a)="GINI"
 round(prom_rub)
 round(a,3)
 
+Conc<-Conc%>%
+  mutate(Bottom_40=ifelse(DECIL<5,1,0))
 
 
 write.dbf(Conc,file="Conc_2014.dbf")
@@ -243,7 +245,7 @@ Conc2014<-read.dbf("Conc_2014.dbf",as.is = T)
 names(Conc2014)<-c("ENTIDAD","FOLIOVIV","FOLIOHOG","GASTO","TOT_INTEG","INGCOR","INGTRAB","TRABAJO","NEGOCIO",
                    "OTROS_TRAB","RENTAS","UTILIDAD","ARRENDA","TRANSFER","JUBILA","BECA","DONATIVO","REMESA",
                    "BENE_GOB","ESP_HOG","ESP_INST","ESTI","OTROS","FACTOR","UPM","EST_DIS","HOGARINDIG","NOMBRE_ENT",
-                   "DEFLACTORES","Nhog","TAM_DECIL","MAXT","ACUMULA","ACUMULA2","DECIL")
+                   "DEFLACTORES","Nhog","TAM_DECIL","MAXT","ACUMULA","ACUMULA2","DECIL","Bottom_40")
 
 mydesign <- svydesign(id=~UPM,strata=~EST_DIS,data=Conc2014,weights=~FACTOR)
 
@@ -708,3 +710,58 @@ write.dbf(c_DECIL_LI,file = "Nacional por fuente por DECIL LI 2014.dbf")
 write.dbf(c_DECIL_ES,file = "Nacional por fuente por DECIL LS 2014.dbf")
 
 rm(list = ls())
+
+################## Bottom 40  #############
+library(foreign)
+library(survey)
+library(doBy)
+library(reldist)
+library(tidyverse)
+options(survey.lonely.psu="adjust")
+
+#reading the data
+setwd("C:/Users/Erick/Dropbox/GIC/GITHUB2018/GIC/ENIGH_2014/ENIGH_2014/")
+Conc2014<-read.dbf("Conc_2014.dbf",as.is = T)
+
+
+names(Conc2014)<-c("ENTIDAD","FOLIOVIV","FOLIOHOG","GASTO","TOT_INTEG","INGCOR","INGTRAB","TRABAJO","NEGOCIO",
+                   "OTROS_TRAB","RENTAS","UTILIDAD","ARRENDA","TRANSFER","JUBILA","BECA","DONATIVO","REMESA",
+                   "BENE_GOB","ESP_HOG","ESP_INST","ESTI","OTROS","FACTOR","UPM","EST_DIS","HOGARINDIG","NOMBRE_ENT",
+                   "DEFLACTORES","Nhog","TAM_DECIL","MAXT","ACUMULA","ACUMULA2","DECIL","Bottom_40")
+
+mydesign <- svydesign(id=~UPM,strata=~EST_DIS,data=Conc2014,weights=~FACTOR)
+ 
+Ming_corTot <- svyratio(~INGCOR,denominator=~Nhog,mydesign) 
+
+#ahora, vamos a hacer lo mismo por decil
+#aqu? cmabia la funci?n a svyby, en by va el decil que creamos.
+#y al final va la funci?n que queremos
+Ming_corbottom_40_income <- svyby(~INGCOR,denominator=~Nhog,by=~Bottom_40,mydesign,svyratio)
+
+ingreso_promedio<-Ming_corTot[[1]]
+
+ingres_por_bottom<-Ming_corbottom_40_income[[2]]
+
+bottom_por_ingresos<-data.frame(c(ingreso_promedio,ingres_por_bottom))
+
+write.dbf(bottom_por_ingresos,file = "bottom_por_ingresos_2010.dbf")
+
+
+
+Consumo_promedio <- svyratio(~GASTO,denominator=~Nhog,mydesign) 
+
+Consumo_por_bottom <- svyby(~GASTO,denominator=~Nhog,by=~Bottom_40,mydesign,svyratio)
+
+
+Consumo_por_bottom <- Consumo_por_bottom[[2]] 
+Consumo_promedio <- Consumo_promedio[[1]]
+
+Consumo<-data.frame(c(Consumo_promedio,Consumo_por_bottom))
+
+
+write.dbf(Consumo,file = "Consumo_por_bottom_2010.dbf")
+
+
+
+
+
