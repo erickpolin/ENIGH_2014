@@ -17,8 +17,12 @@ Conc<-read.dbf("NCV_concentrado_2014_concil_2010.dbf",as.is = T)
 Conc<-Conc%>%
   select("folioviv"=FOLIOVIV,GASTO_MON,"foliohog"=FOLIOHOG,TOT_INTEG,ING_COR,INGTRAB,TRABAJO,NEGOCIO,
          OTROS_TRAB, RENTAS, UTILIDAD,ARRENDA, TRANSFER,JUBILACION,BECAS,DONATIVOS,
-         REMESAS,BENE_GOB,TRANSF_HOG,TRANS_INST,ESTIM_ALQU,OTROS_ING,FACTOR_HOG,UPM,EST_DIS)
-    
+         REMESAS,BENE_GOB,TRANSF_HOG,TRANS_INST,ESTIM_ALQU,OTROS_ING,FACTOR_HOG,UPM,EST_DIS,TAM_LOC)
+
+Conc<-Conc%>%
+  mutate(Small=ifelse(TAM_LOC==4,1,0))
+
+prop.table(table(Conc$Small))
     
   
 ################ DEfinir hogares in?genas 
